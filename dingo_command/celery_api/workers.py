@@ -448,19 +448,6 @@ def deploy_kubernetes(cluster: ClusterObject, lb_ip: str, task_id: str = None):
     runtime_task = Taskinfo(task_id=task_id, cluster_id=cluster.id, state="progress",
                          start_time=datetime.fromtimestamp(datetime.now().timestamp()),
                          msg=TaskService.TaskMessage.runtime_prepair.name)
-    etcd_task = Taskinfo(task_id=task_id, cluster_id=cluster.id, state="progress",
-                         start_time=datetime.fromtimestamp(datetime.now().timestamp()),
-                         msg=TaskService.TaskMessage.etcd_deploy.name)
-    control_plane_task = Taskinfo(task_id=task_id, cluster_id=cluster.id, state="progress",
-                                  start_time=datetime.fromtimestamp(datetime.now().timestamp()),
-                                  msg=TaskService.TaskMessage.controler_deploy.name)
-    worker_task = Taskinfo(task_id=task_id, cluster_id=cluster.id, state="progress",
-                           start_time=datetime.fromtimestamp(datetime.now().timestamp()),
-                           msg=TaskService.TaskMessage.worker_deploy.name)
-    component_task = Taskinfo(task_id=task_id, cluster_id=cluster.id, state="progress",
-                              start_time=datetime.fromtimestamp(datetime.now().timestamp()),
-                              msg=TaskService.TaskMessage.component_deploy.name)
-
     try:
         # #替换
         # # 定义上下文字典，包含所有要替换的变量值
@@ -522,36 +509,44 @@ def deploy_kubernetes(cluster: ClusterObject, lb_ip: str, task_id: str = None):
                         task_info.detail = TaskService.TaskDetail.runtime_prepair.value
                         update_task_state(task_info)                  
                         # 写入下一个任务
-                        etcd_task.start_time = datetime.fromtimestamp(datetime.now().timestamp())
-                        task_info = etcd_task
+                        etcd_task = Taskinfo(task_id=task_id, cluster_id=cluster.id, state="progress",
+                                             start_time=datetime.fromtimestamp(datetime.now().timestamp()),
+                                             msg=TaskService.TaskMessage.etcd_deploy.name)
                         TaskSQL.insert(etcd_task)
+                        task_info = etcd_task
                     if task_name == etcd_task_name and host is not None:
                         task_info.end_time = datetime.fromtimestamp(datetime.now().timestamp())
                         task_info.state = "success"
                         task_info.detail = TaskService.TaskDetail.etcd_deploy.value
                         update_task_state(task_info)                  
                         # 写入下一个任务
-                        control_plane_task.start_time = datetime.fromtimestamp(datetime.now().timestamp())
-                        task_info = control_plane_task
+                        control_plane_task = Taskinfo(task_id=task_id, cluster_id=cluster.id, state="progress",
+                                                      start_time=datetime.fromtimestamp(datetime.now().timestamp()),
+                                                      msg=TaskService.TaskMessage.controler_deploy.name)
                         TaskSQL.insert(control_plane_task)
+                        task_info = control_plane_task
                     if task_name == control_plane_task_name and host is not None:
                         task_info.end_time = datetime.fromtimestamp(datetime.now().timestamp())
                         task_info.state = "success"
                         task_info.detail = TaskService.TaskDetail.controler_deploy.value
                         update_task_state(task_info)   
                         # 写入下一个任务
-                        worker_task.start_time = datetime.fromtimestamp(datetime.now().timestamp())
-                        task_info = worker_task
+                        worker_task = Taskinfo(task_id=task_id, cluster_id=cluster.id, state="progress",
+                                               start_time=datetime.fromtimestamp(datetime.now().timestamp()),
+                                               msg=TaskService.TaskMessage.worker_deploy.name)
                         TaskSQL.insert(worker_task)
+                        task_info = worker_task
                     if task_name == work_node_task_name and host is not None and task_status != "failed":
                         task_info.end_time = datetime.fromtimestamp(datetime.now().timestamp())
                         task_info.state = "success"
                         task_info.detail = TaskService.TaskDetail.worker_deploy.value
                         update_task_state(task_info)
-                        component_task.start_time = datetime.fromtimestamp(datetime.now().timestamp())   
-                        task_info = component_task
+                        component_task = Taskinfo(task_id=task_id, cluster_id=cluster.id, state="progress",
+                                                  start_time=datetime.fromtimestamp(datetime.now().timestamp()),
+                                                  msg=TaskService.TaskMessage.component_deploy.name)
                         TaskSQL.insert(component_task)
-                    
+                        task_info = component_task
+
             #time.sleep(0.01)
             continue
         log_file = os.path.join(WORK_DIR, "ansible-deploy", "inventory", str(cluster.id), "ansible_debug.log")
@@ -1454,9 +1449,9 @@ def delete_cluster(self, cluster_id, token):
                 update_cluster_status(cluster_id)
                 return True
             else:
-                print(f"Terraform error: {res.stderr}")
+                print(f"Terraform error: {process.stderr}")
                 # 在这里判断具体的日志输出信息，如果出现删除安全组超时就判断为删除成功
-                raise Exception("delete cluster Error terraform destroy exception: {}".format(res.stderr))
+                raise Exception("delete cluster Error terraform destroy exception: {}".format(process.stderr))
         else:
             update_cluster_status(cluster_id)
             return True
@@ -1509,7 +1504,7 @@ def delete_node(self, cluster_id, cluster_name, node_list, instance_list, extrav
             log_file.write(format(runner.stdout.read()))
         thread.join()
         if runner.rc != 0:
-            print("{}".format(runner.stdout.read()))
+            # print("{}".format(runner.stdout.read()))
             raise Exception(f"Ansible remove node failed, please check log")
 
         # # 2、执行完删除k8s这些节点之后，再执行terraform销毁这些节点（这里是单独修改output.json文件还是需要通过之前生成的output.json文件生成）
