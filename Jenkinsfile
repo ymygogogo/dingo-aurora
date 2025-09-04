@@ -46,7 +46,7 @@ pipeline {
                 }
             }
             steps {
-                echo "⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️++++++build image harbor.zetyun.cn/dingostack/dingo-command:${IMAGE_TAG}"
+                echo "⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️++++++-build image harbor.zetyun.cn/dingostack/dingo-command:${IMAGE_TAG}"
                 // withCredentials([usernamePassword(credentialsId: 'harbor_credential', usernameVariable: 'HARBOR_USERNAME', passwordVariable: 'HARBOR_PASSWORD')]) {
                 //     sh 'podman login harbor.zetyun.cn -u $HARBOR_USERNAME -p $HARBOR_PASSWORD'
                 // }
