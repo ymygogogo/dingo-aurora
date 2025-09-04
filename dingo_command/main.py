@@ -13,7 +13,7 @@ app = FastAPI(
     title=PROJECT_NAME,
     openapi_url="/v1/openapi.json",
 )
-
+print("11111111")
 @app.get("/", description="根url")
 async def root():
     return {"message": "Welcome to the dingo-command!"}
